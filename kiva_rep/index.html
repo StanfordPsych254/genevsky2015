@@ -1,0 +1,377 @@
+<!-- Sets up templates for the actual "slides" and forms that are 
+supposed to be shown at each stage of the experiment. -->
+
+<html>
+<head>
+  <title>Image rating</title>
+<script src="https://stanford.edu/~lctong/mturk/common/jquery.min.js"></script>
+<!-- <script src="https://web.stanford.edu/~dco/common/mmturkey_dco_eaReboot.js?nowarn"></script> -->
+<script src="https://stanford.edu/~lctong/mturk/common/mmturkey.js"></script>
+<script src="//uniqueturker.myleott.com/lib.js" type="text/javascript"></script>
+<script type="text/javascript">
+(function(){
+    var ut_id = "d86daf30ef6e11f8d40b1421dbb4ab61";
+    if (UTWorkerLimitReached(ut_id)) {
+        document.getElementById('mturk_form').style.display = 'none';
+        document.getElementsByTagName('body')[0].innerHTML = "You have already completed the maximum number of HITs allowed by this requester. Please click 'Return HIT' to avoid any impact on your approval rating.";
+    }
+})();
+</script>
+<link rel="stylesheet" href="https://stanford.edu/~lctong/mturk/common/style.css" />
+<style type="text/css">
+.slide, #instructions, #wheel {
+    min-width: 800px;
+}
+.block-text, .block-text2, .block-text3 {
+  width: 650px;
+  text-align: justify;
+  margin: 2 auto;
+  margin-bottom: 1em;
+  line-height:1.2em;
+}
+.radioGroupBelow label{
+    display:inline-block;
+    text-align:center;
+    margin:0 0.2em;
+}
+.radioGroupBelow label input[type="radio"] {
+    display:block;
+    margin:0.5em auto;
+}
+
+
+</style>
+</head>
+<body>
+
+<script LANGUAGE="JavaScript">
+function validateParticipantID(){
+    if ($('#participantID').val()>1 & $('#participantID').val()<1000) {
+        return true;
+    } else {
+        alert ( "Please input a valid participant ID." );
+        return false;
+    }
+}
+</script>
+
+
+
+<div class="progress" id="progressBar">
+    <div class="bar-wrapper">
+      <div class="bar"></div>
+    </div>
+    <p>Progress bar: <span id="trial-num">{{}}</span><span>/</span><span id="total-num">{{}}</span></p>
+</div>
+
+
+
+<div class="slide" id="instructions">
+    <img src="https://stanford.edu/~lctong/mturk/common/images/stanford.png" alt="Stanford University">
+    <p id='logo-text'>Symbiotic Project on Affective Neuroscience</p>
+    <p class="block-text">
+        In this study, we are interested in how people feel about 25 different images.<br>
+        The task will take approximately 5 minutes.
+    </p>
+    <p class="block-text">
+        This HIT will be posted several times. Please do not take this hit more than once.
+    </p>
+    <!-- <center>
+        <input type="text" id="participantID" /><br />
+    </center> -->
+    <button type="button" onclick="this.blur(); experiment.next(); ">Next</button>
+    <p class="block-text" id="legal">By answering the following questions, you are participating in a study being performed by cognitive scientists in the Stanford Department of Psychology. If you have questions about this research, please contact us at <a href="mailto://stanfordpsych254@gmail.com.">stanfordpsych254@gmail.com</a>. You must be  at least 18 years old to participate. Your participation in this research is voluntary. You may decline to answer any or all of the  following questions. You may decline further participation, at any time,  without adverse consequences. Your anonymity is assured; the researchers  who have requested your participation will not receive any personal information  about you. Note however that we have recently been made aware that your public Amazon.com profile can be accessed via your worker ID if you do not choose  to opt out. If you would like to opt out of this feature, you may follow instructions available  <a href="https://www.amazon.com/gp/help/customer/display.html?nodeId=16465241">here</a>.</p>
+</p>
+ </div>
+
+
+<!--ask Brian about # of options-->
+<div class="slide" id="stage">
+    <table align="center" cellpadding="3">
+        <tr>
+            <td valign="top" width="300">
+                    <p><img id="imageElement" src="https://stanford.edu/~lctong/mturk/common/images/blank.jpg"></p>
+            </td>
+            <td width="1" bgcolor="#E5E4E2"><img src="http://www.stanford.edu/~lctong/mturk/common/images/trans_sq.gif"></td>
+            <td width="300">
+                <!-- can they see a facial expression? -->
+                <b>1) &nbsp; On a scale of 1-7 how well can you see this person's facial expression?</b>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center" width="13%">not at all</td>
+                            <td align="center">&nbsp; </td>
+                            <td align="center" width="13%">very clearly</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center"><input name="cansee" type="radio" value="1" /><br />
+                            1</td>
+                            <td align="center"><input name="cansee" type="radio" value="2" /><br />
+                            2</td>
+                            <td align="center"><input name="cansee" type="radio" value="3" /><br />
+                            3</td>
+                            <td align="center"><input name="cansee" type="radio" value="4" /><br />
+                            4</td>
+                            <td align="center"><input name="cansee" type="radio" value="5" /><br />
+                            5</td>
+                            <td align="center"><input name="cansee" type="radio" value="6" /><br />
+                            6</td>
+                            <td align="center"><input name="cansee" type="radio" value="7" /><br />
+                            7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr align="left" width="300" />
+
+                <b>2) &nbsp; On a scale of 1-7 how negative to positive is this person&#39;s expression?</b>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center" width="13%">very negative</td>
+                            <td align="center">neutral</td>
+                            <td align="center" width="13%">very positive</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Valence rating -->
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center"><input name="val" type="radio" value="1" /><br />
+                            1</td>
+                            <td align="center"><input name="val" type="radio" value="2" /><br />
+                            2</td>
+                            <td align="center"><input name="val" type="radio" value="3" /><br />
+                            3</td>
+                            <td align="center"><input name="val" type="radio" value="4" /><br />
+                            4</td>
+                            <td align="center"><input name="val" type="radio" value="5" /><br />
+                            5</td>
+                            <td align="center"><input name="val" type="radio" value="6" /><br />
+                            6</td>
+                            <td align="center"><input name="val" type="radio" value="7" /><br />
+                            7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr align="left" width="300" />
+
+                <!-- Arousal rating -->
+                <b>3) &nbsp; Both positive and negative emotions can vary in terms of arousal or energy. For example, big smiles and fearful expressions convey high arousal, but small smiles and calm expressions convey lower arousal. How aroused or energetic is this person's expression?</b>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center" width="13%">not aroused</td>
+                            <td align="center">somewhat<br />
+                            aroused</td>
+                            <td align="center" width="13%">very aroused</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center"><input name="aro" type="radio" value="1" /><br />
+                            1</td>
+                            <td align="center"><input name="aro" type="radio" value="2" /><br />
+                            2</td>
+                            <td align="center"><input name="aro" type="radio" value="3" /><br />
+                            3</td>
+                            <td align="center"><input name="aro" type="radio" value="4" /><br />
+                            4</td>
+                            <td align="center"><input name="aro" type="radio" value="5" /><br />
+                            5</td>
+                            <td align="center"><input name="aro" type="radio" value="6" /><br />
+                            6</td>
+                            <td align="center"><input name="aro" type="radio" value="7" /><br />
+                            7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr align="left" width="300" />
+
+            </td>
+            <td width="1" bgcolor="#E5E4E2"><img src="http://www.stanford.edu/~genevsky/images/trans_sq.gif"></td>
+            <td width="300">        
+                <!-- Discrete emotion categories -->
+                <b>4) &nbsp; Choose the emotion that best describes their facial expression</b>
+
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="1" />Happy<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="2" />Sad<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="3" />Calm<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="4" />Excited</td>
+                            <td>&nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="5" />Anger<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="6" />Fearful<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="7" />Surprised<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<input name="emo" type="radio" value="8" />Disgusted</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr align="left" width="300" />
+                
+                <!-- Emotion intensity -->
+                <b>5) &nbsp; How intensely is the person expressing that emotion?</b>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center" width="13%">not at all</td>
+                            <td align="center">medium<br />
+                            intensity</td>
+                            <td align="center" width="13%">very intensely</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center"><input name="inten" type="radio" value="1" /><br />
+                            1</td>
+                            <td align="center"><input name="inten" type="radio" value="2" /><br />
+                            2</td>
+                            <td align="center"><input name="inten" type="radio" value="3" /><br />
+                            3</td>
+                            <td align="center"><input name="inten" type="radio" value="4" /><br />
+                            4</td>
+                            <td align="center"><input name="inten" type="radio" value="5" /><br />
+                            5</td>
+                            <td align="center"><input name="inten" type="radio" value="6" /><br />
+                            6</td>
+                            <td align="center"><input name="inten" type="radio" value="7" /><br />
+                            7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr align="left" width="300" />
+
+                <b>6) &nbsp; Imagine this person is asking for donations. How in need do you think they appear?</b>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center" width="13%">not at all</td>
+                            <td align="center">somewhat<br>in need</td>
+                            <td align="center" width="13%">very in need</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table width="300">
+                    <tbody>
+                        <tr>
+                            <td align="center"><input name="need" type="radio" value="1" /><br />
+                            1</td>
+                            <td align="center"><input name="need" type="radio" value="2" /><br />
+                            2</td>
+                            <td align="center"><input name="need" type="radio" value="3" /><br />
+                            3</td>
+                            <td align="center"><input name="need" type="radio" value="4" /><br />
+                            4</td>
+                            <td align="center"><input name="need" type="radio" value="5" /><br />
+                            5</td>
+                            <td align="center"><input name="need" type="radio" value="6" /><br />
+                            6</td>
+                            <td align="center"><input name="need" type="radio" value="7" /><br />
+                            7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr align="left" width="300" /> 
+                <button type="button" id="nextButton" onclick="this.blur(); experiment.next();">Next</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+<div class="slide" id="askInfo">
+    
+    <div id="form">
+
+
+    <p id="infoQ">Please answer a few questions about yourself. </p>
+
+
+    <form name="gender">
+    <span id="infoQ">What is your gender?</span>&nbsp;&nbsp;
+    <input type="radio" name="genderButton" value="M" /><span id="opt">Male</span>&nbsp;&nbsp;
+    <input type="radio" name="genderButton" value="F" /><span id="opt">Female</span>
+    </form>
+    
+    <form name="age">
+    <span id="infoQ">What is your age?</span>&nbsp;&nbsp;
+    <input type="text" id="ageRange" /><br />
+    </form>
+
+    <form name="race">
+    <span id="infoQ">What is your race or ethnicity?</span></br>
+    <input type="radio" name="raceButton" value="amind" /><span id="opt">American Indian or Alaska Native</span></br>
+    <input type="radio" name="raceButton" value="hawaii" /><span id="opt">Hawaiian or Other Pacific Islander</span></br>
+    <input type="radio" name="raceButton" value="asian" /><span id="opt">Asian or Asian American</span></br>
+    <input type="radio" name="raceButton" value="black" /><span id="opt">Black or African American</span></br>
+    <input type="radio" name="raceButton" value="hisp" /><span id="opt">Hispanic or Latino</span></br>
+    <input type="radio" name="raceButton" value="white" /><span id="opt">Non-Hispanic White</span></br>
+    <input type="radio" name="raceButton" value="other" /><span id="opt">Other</span>&nbsp;<input type="text" id="raceOther" /><br />
+    </form>
+    
+    
+    <form name="language">
+    <span id="infoQ">What is your native language?</span>&nbsp;&nbsp;
+    <input type="text" name="nativeLanguage" /><br />
+    </form>
+    
+    
+    <form name="comments">
+    </br>
+    </br>
+    
+    <span id="infoQ"> (Optional) Please leave any comments or suggestions regarding this HIT (e.g., repeated images, trouble loading images), etc.:</span></br>
+    <TEXTAREA name="commentsTextArea" ROWS=10 COLS=50></TEXTAREA>
+    </br>
+
+        <p id="block-text">Thank you for doing this task! Please hit the button below to proceed to the debriefing.</p>
+
+        </form>
+        <br>
+        <br>
+
+    <button type="button" onclick="this.blur(); experiment.debrief();">Next</button>
+
+    </div>
+</div>
+
+<div class="slide" id="debrief">
+    <p id="block-text">Thank you for doing this task! In this task, we aim to replicate the first study of <a href="http://journals.sagepub.com/doi/full/10.1177/0956797615588467">Genevsky & Knutson, 2015</a>.</p> According to the study, MTurk users' emotion ratings about the faces of individuals requesting money on a microloan site could be used to predict how quickly those microloans were funded, even though the MTurk users were completely independent of the users on the microloan site. This suggests that measurements are of emotion may be generalizable across different groups of people in ways that can be useful for predicting (and explaining) market behavior.
+
+    <p id="block-text">Thank you again for doing this task! Please hit the button below to end the experiment!</p>
+    <button align="center" type="button" onclick="this.blur(); experiment.end();">End</button>
+</div>
+
+
+<div class="slide" id="finished">
+  You're finished - thanks for participating! Submitting ...
+</div>
+
+<script src="https://stanford.edu/~lctong/mturk/common/raphael.js" type="text/javascript"></script>
+<script src="kivaexpt.js"></script>
+</body>
+</html>
