@@ -142,7 +142,6 @@ mod1 <- lmer(logdollarhour ~ scale(per_posemo) + scale(per_negemo) + scale(pa) +
                scale(total_words_in_description) + 
                scale(loan_amount) + scale(terms_2_repayment_term) +
                gender + (1|sector) + (1|location_3_country_code) + (1|subj), data=merged_data)
-summary(mod1)
 
 ## main analysis 2, (figure 2b)
 fig2b_rep=ggplot(summarized_data, aes(x=pa,y=mean_logdollarhour)) +
@@ -156,6 +155,11 @@ fig2b_rep=ggplot(summarized_data, aes(x=pa,y=mean_logdollarhour)) +
 ### Confirmatory analysis
 
 The analyses as specified in the analysis plan.  
+
+## Table 1
+```{r}
+summary(mod1)
+```
 
 ![Figure 2B of Genevsky & Knutson (2015)](https://web.stanford.edu/~lctong/mturk/psych254/kiva_rep/fig2b.png)
 
