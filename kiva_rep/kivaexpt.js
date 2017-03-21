@@ -123,6 +123,7 @@ Displays each slide
 
 
 
+
 function showSlide(id) {
   $(".slide").hide();
   $("#"+id).show();
@@ -148,12 +149,12 @@ function shuffle(array) {
 };
 
 var imageElement = document.getElementById("imageElement");
-var numTrials=10;
+var numTrials=20;
 var ord=new Array();
 var imgs="";
-var imglen="";
 var randInd="";
 var i=0;
+var images = new Array()
 
 var numComplete = 0;
 var trial;
@@ -163,27 +164,41 @@ var trial;
 try {
     var filename = "kiva_rep"
     var filelist = "kiva_imgids"
-    var condCounts = "2"   
+    var condCounts = "1"   
     var xmlHttp = null;
     xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "GET", "https://web.stanford.edu/~lctong/cgi-bin/maker_getter_kiva.php?conds=" + 
     condCounts +"&filename=" + filename +"&filelist=" + filelist + "&ntrials=" +numTrials, false );
     xmlHttp.send( null );
     var imgdata = xmlHttp.responseText;
-    imgs=imgdata.split("\n");
-    imglen=imgs.length;
+    imgs=imgdata.split(" ");
     ord=shuffle(imgs);
-    ord=ord.slice(0,10);
 } catch (e) {
     $.get("https://web.stanford.edu/~lctong/cgi-bin/experiment_files/kiva_imgids.txt",{},function(data){
     imgs=data.split("\n");
-    imglen=imgs.length;
     ord=shuffle(imgs);
-    ord=ord.slice(0,10);
     });
 }
 
-var maxTimeLength = 400
+// Decrement only if this is an actual turk worker!  
+    imgdata= imgdata.split(' ').join(';');
+  if (turk.workerId.length > 0){
+   var xmlHttp = null;
+   xmlHttp = new XMLHttpRequest();
+   xmlHttp.open('GET',    
+    'https://web.stanford.edu/~lctong/cgi-bin/' + 
+    'decrementer_yt.php?filename=' + 
+    filename + "&to_decrement=" + imgdata, false);
+    xmlHttp.send(null);
+  }
+
+// preload images
+for (i = 0; i < numTrials; i++) {
+    trial = ord[(i)];
+    images[i] = new Image()
+    url = "https://www.kiva.org/img/s300/" + trial + ".jpg/"
+    images[i].src = url
+    }
 
 $("#progressBar").hide();
 showSlide("instructions");
@@ -236,18 +251,6 @@ var experiment = {
     // Show the finish slide.
     showSlide("finished");
 
-    // Decrement only if this is an actual turk worker!  
-    imgdata= imgdata.split(' ').join(';');
-  if (turk.workerId.length > 0){
-   var xmlHttp = null;
-   xmlHttp = new XMLHttpRequest();
-   xmlHttp.open('GET',    
-    'https://web.stanford.edu/~lctong/cgi-bin/' + 
-    'decrementer_yt.php?filename=' + 
-    filename + "&to_decrement=" + imgdata, false);
-    xmlHttp.send(null);
-  }
-
     /*
     Wait 1.5 seconds and then submit the whole experiment object to Mechanical Turk (mmturkey filters out the functions so we know we’re just submitting properties [i.e. data])
     */
@@ -284,9 +287,9 @@ var experiment = {
     }else{
       $('.bar').css('width', (200.0 * numComplete/ (numTrials) ) + 'px');
       $("#trial-num").html(numComplete);
-      trial = ord[(numComplete)];
-      impath = "https://www.kiva.org/img/s300/" + trial + ".jpg/";
-      imageElement.setAttribute("src", impath);
+      //trial = ord[(numComplete)];
+      //impath = "https://www.kiva.org/img/s300/" + trial + ".jpg/";
+      imageElement.setAttribute("src", images[(numComplete)].src);
       $('input[name=cansee]').attr('checked',false);
       $('input[name=val]').attr('checked',false);
       $('input[name=aro]').attr('checked',false);

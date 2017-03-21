@@ -10,8 +10,6 @@ output:
       collapsed: false
 ---
 
-<!-- Replication reports should all use this template to standardize reporting across projects.  These reports will be public supplementary materials that accompany the summary report(s) of the aggregate results. -->
-
 ##Introduction
 
 This is a replication of the Internet study described in Genevsky & Knutson (2015). The original study asked about the relative contribution of different features of microloan requests to funding success. The study focused on affective features and modality, including the affective quality of the faces of the microloan recipients, and the text used in the description. The original paper found that affective ratings of microloan recipient faces in an independent Internet sample could be used to predict the rate at which a microloan received funding.
@@ -19,21 +17,21 @@ This is a replication of the Internet study described in Genevsky & Knutson (201
 
 ##Methods
 
-Participants are asked to view 10 images and rate each of them on the following dimensions: how clear the image is, affective valence, affective arousal, discrete emotion, emotion intensity, and neediness.
+Participants are asked to view 20 images and rate each of them on the following dimensions: how clear the image is, affective valence, affective arousal, discrete emotion, emotion intensity, and neediness.
 
 ###Power Analysis
 
-The original analysis was a mixed-effects model, so it is not straightforward to devise an exact power analysis. Instead, I used simulation on the original data, by running the primary analysis of interest on random (without replacement) smaller subsamples of the data, I found that I could obtain power of 0.80 using samples of 2800 images.
+The original analysis was a mixed-effects model, so it is not straightforward to devise an exact power analysis. Instead, I used simulation on the original data, by running the primary analysis of interest on random (without replacement) smaller subsamples of the data, I found that I could obtain power of 0.80 using random samples of 2800 images.
 
 ###Planned Sample
 
-Planned sample size is 2800 images, at 10 images per subject and 2 ratings per image, this requires a sample of 560 subjects.
+Planned sample size is 2800 images, at 20 images per subject, this requires a sample of 140 subjects.
 
 ###Materials
 
 "We acquired extensive data on microloan outcomes from Kiva Microfunds (www.kiva.org), an Internet-based international microfinance organization. Kiva’s Web site allows users to offer small financial loans to individuals in need. Loans are funded in $25 increments but are received by the borrower only if the requested amount is successfully raised within 30 days of the initial loan request. We first used the Kiva application programming interface to sample 144,769 loan requests from those posted during the 2012 calendar year, the most recent period that could ensure complete loan-outcome results at the time of initial analyses. We then excluded loan requests with multiple borrowers (remaining n = 127,811), to minimize heterogeneity in photograph ratings arising from variations in the size of the borrower group; loan requests without text (remaining n = 120,130), because they could not be scored with respect to affective words in the text; (c) loan requests that were fully funded within the last 3 days of eligibility (remaining n = 109,454), to limit potential confounds due to shifts in lender’s motiva- tions and behavior as the deadline for loan expiration approached; and (d) loan requests with additional miss- ing data points (remaining n = 91,858). Of the remaining 91,858 loan requests, 13,500 were randomly sampled for analysis (i.e., 7,000 funded and 6,500 not funded)."
 
-Note that while the original study included 7000 microloans that were funded, we are using a random subset of that original stimulus set, including 2800 stimuli.
+Note that while the original study included 7000 microloans that were funded, we are randomly sampling a subset of 2800 images from the original stimulus set. The subset will not be preselected (as MTurk participants accept the HIT, samples of images will be taken without replacement from the superset).
 
 ###Procedure	
 
@@ -47,7 +45,13 @@ We will conduct a mixed model using random intercepts for subjects, sector, and 
 
 ###Differences from Original Study
 
-One important difference is that in the current replication, participants are explicitly asked to make 10 ratings, while in the original study, participants could choose to rate between 1 and 50 loan request images. This is not anticipated to have any directional impact on the effect.
+One important difference is that in the current replication, participants are explicitly asked to make 20 ratings, while in the original study, participants could choose to rate between 1 and 50 loan request images.
+
+The analysis also uses one MTurker rating per image, rather than two MTurker ratings per image.
+
+The analysis also differs in that it explicitly fits subject random intercepts, rather than aggregating over individual MTurk subjects to arrive at each affect rating.
+
+These differences are not anticipated to have an effect on the main result.
 
 ### Methods Addendum (Post Data Collection)
 
@@ -73,43 +77,92 @@ Data preparation following the analysis plan.
 ####Load Relevant Libraries and Functions
 library(jsonlite)
 library(tidyverse)
+library(lme4)
+library(lmerTest)
 
 ####Import data
 ## load outcome data
-dana1 <- read.csv("dana1_samp.csv")
-## load and process affective ratings
-setwd("~/Desktop/projs/ytmt/")
+dana1 <- read.csv("kiva_aggdata.csv")
+
+## load mturk json files
 hits=list.dirs(recursive=F)
-##
 data=list()
 for (f in hits){
-files=list.files(paste(f,"/production-results/", sep=""),pattern=".json")
+files=list.files(paste(f,"/production-results-anonymized-results/", sep=""),pattern=".json")
   for (i in files){
-    data[[length(data)+1]]=fromJSON(paste(f,"/production-results/",i,sep=""))
+    data[[length(data)+1]]=fromJSON(paste(f,"/production-results-anonymized-results/",i,sep=""))
   }
 }
-
-## preprocessing will be easier when I have the data.
-
+## pull relevant data from json files
+image_0_id=c();valence=c();arousal=c();cansee=c();need=c();comments=c();subj=c()
+for (i in 1:length(data)){
+subj=c(subj,data[[i]]$WorkerId);
+image_0_id=c(image_0_id,as.numeric(data[[i]]$answers$data$orderArray));
+valence=c(valence,data[[i]]$answers$data$valence);
+arousal=c(arousal,data[[i]]$answers$data$arousal);
+cansee=c(cansee,data[[i]]$answers$data$clear);
+need=c(need,data[[i]]$answers$data$need);
+comments=c(comments,data[[i]]$answers$data$comments);
+}
+mturkdata=data.frame(subj,image_0_id,valence,arousal,cansee,need,comments)
 
 #### Data exclusion / filtering
 
+# find subjects who responded with zero variance on any question
+mturkdata_var = mturkdata %>%
+  group_by(subj) %>% 
+  summarise(var_valence=var(valence,na.rm=TRUE),var_arousal=var(arousal,na.rm=TRUE),var_cansee=var(cansee,na.rm=TRUE),var_need=var(need,na.rm=TRUE))
+subj_ex=mturkdata_var[mturkdata_var$var_valence==0 | mturkdata_var$var_arousal==0 | mturkdata_var$var_cansee==0 | mturkdata_var$var_need==0,]$subj
+# keep subjects with nonzero variance
+mturkdata=mturkdata[!(mturkdata$subj %in% subj_ex),]
+
 #### Prepare data for analysis - create columns etc.
 
+## combine MTurk ratings with out of sample data, drop rows for images that were not rated on MTurk
+merged_data=full_join(mturkdata,dana1) %>%
+  filter(!is.na(subj))
+
+## generate positive arousal and negative arousal variables, these should be ipsatized, following Knutson, Katovich, & Suri (TICS 2014), but in the original figure they are not
+merged_data = merged_data %>%
+  group_by(subj) %>% 
+  mutate(val_ip=as.numeric(scale(valence,scale=F)),aro_ip=as.numeric(scale(arousal,scale=F)),see_ip=as.numeric(scale(cansee,scale=F)),need_ip=as.numeric(scale(need,scale=F))) %>% # ipsatize variables
+  ungroup() %>%
+  mutate(pa=arousal/sqrt(2)+valence/sqrt(2),na=arousal/sqrt(2)-valence/sqrt(2), pa_ip=aro_ip/sqrt(2)+val_ip/sqrt(2),na_ip=aro_ip/sqrt(2)-val_ip/sqrt(2)) # rotate axes
+
+
+## average over observations with the same PA value for plotting figure 2b
+summarized_data = merged_data %>% 
+  filter(!is.na(logdollarhour)) %>%
+  group_by(pa) %>%
+  summarize(mean_logdollarhour=mean(logdollarhour),se_logdollarhour=sd(logdollarhour)/sqrt(length(logdollarhour)))
+  
+## main analysis 1, (table 1)
 mod1 <- lmer(logdollarhour ~ scale(per_posemo) + scale(per_negemo) + scale(pa) + scale(na) + 
-               scale(Answer.cansee) + scale(Answer.need) + 
+               scale(see_ip) + scale(need_ip) + 
                scale(total_words_in_description) + 
                scale(loan_amount) + scale(terms_2_repayment_term) +
-               gender + (1|sector) + (1|location_3_country_code), data=dana1)
+               gender + (1|sector) + (1|location_3_country_code) + (1|subj), data=merged_data)
+summary(mod1)
 
-
+## main analysis 2, (figure 2b)
+fig2b_rep=ggplot(summarized_data, aes(x=pa,y=mean_logdollarhour)) +
+  geom_point(size=2) +
+  geom_errorbar(aes(ymax=mean_logdollarhour+se_logdollarhour,ymin=mean_logdollarhour-se_logdollarhour, width=0.2))+
+  geom_smooth(method="lm",se=F) +
+  labs(x = "pa", y = "logdollarhour")+
+  ylim(0,5)
 ```
 
 ### Confirmatory analysis
 
 The analyses as specified in the analysis plan.  
 
-*Side-by-side graph with original graph is ideal here*
+![Figure 2B of Genevsky & Knutson (2015)](https://web.stanford.edu/~lctong/mturk/psych254/kiva_rep/fig2b.png)
+
+```{r}
+### Figure 2b replication
+fig2b_rep
+```
 
 ###Exploratory analyses
 
