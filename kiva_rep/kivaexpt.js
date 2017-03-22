@@ -148,6 +148,10 @@ function shuffle(array) {
   return array;
 };
 
+var containerElement = document.getElementById('stage');
+var overlayEle = document.getElementById('overlay');
+var democontainerElement = document.getElementById('askInfo');
+var demooverlayEle = document.getElementById('demooverlay');
 var imageElement = document.getElementById("imageElement");
 var numTrials=20;
 var ord=new Array();
@@ -241,7 +245,6 @@ var experiment = {
   end: function() {
     // Records demographics
     experiment.gender = $('input[name="genderButton"]:checked').val();
-    //experiment.age = $('select[name="ageRange"]').val();
     experiment.race = $('input[name="raceButton"]:checked').val();
     experiment.raceother = $('#raceOther').val();
     experiment.age = $('#ageRange').val();
@@ -258,14 +261,36 @@ var experiment = {
   },
 
   debrief: function() {
+      experiment.demoblur(0);
       showSlide("debrief");
   },
 
+  blur: function(state) {
+    /* state can be 1 or 0 */
+    if (state) {
+        overlayEle.style.display = 'block';
+    } else {
+        overlayEle.style.display = 'none';
+        containerElement.setAttribute('class', 'slide');
+    }
+  },
+
+  demoblur: function(state) {
+    /* state can be 1 or 0 */
+    if (state) {
+        demooverlayEle.style.display = 'block';
+    } else {
+        demooverlayEle.style.display = 'none';
+        democontainerElement.setAttribute('class', 'slide');
+    }
+  },
 
   next: function() {
+
     if(numComplete==0){
       $("#progressBar").show();
-      experiment.startTime = (new Date()).getTime();}
+      experiment.startTime = (new Date()).getTime();
+    }
 
     if(numComplete>0) {
       $('#nextButton').attr("disabled","true");
@@ -278,12 +303,14 @@ var experiment = {
       experiment.discrete[numComplete-1] = parseInt($('input[name="emo"]:checked').val(),10);
       experiment.intensity[numComplete-1] = parseInt($('input[name="inten"]:checked').val(),10);
       experiment.need[numComplete-1] = parseInt($('input[name="need"]:checked').val(),10);
-
     }
+
     if (numComplete >= numTrials) {
-              $('.bar').css('width', (200.0 * numComplete/ (numTrials) ) + 'px');
-              $("#trial-num").html(numComplete);
-              showSlide("askInfo");
+      $('.bar').css('width', (200.0 * numComplete/ (numTrials) ) + 'px');
+      $("#trial-num").html(numComplete);
+      experiment.blur(0);
+      showSlide("askInfo");
+      $('body').scrollTop(0);
     }else{
       $('.bar').css('width', (200.0 * numComplete/ (numTrials) ) + 'px');
       $("#trial-num").html(numComplete);
@@ -297,14 +324,37 @@ var experiment = {
       $('input[name=inten]').attr('checked',false);
       $('input[name=need]').attr('checked',false);
 
-      imageElement.onload = function() {
-        $('#nextButton').removeAttr("disabled");
-        showSlide("stage");
-        $('body').scrollTop(0);
-      }
+      //imageElement.onload = function() {
+      experiment.blur(0);
+      showSlide("stage");
+      //blur(0);
+      $('#nextButton').removeAttr("disabled");
+      $('body').scrollTop(0);
+      //}
       numComplete++;
     }
   },
+
+  validation: function() {
+    $('#contButton').removeAttr("disabled");
+    containerElement.setAttribute('class', 'blur');
+    if($('input[name=cansee]').is(':checked') && $('input[name=val]').is(':checked')&&
+      $('input[name=aro]').is(':checked') && $('input[name=emo]').is(':checked') && $('input[name=inten]').is(':checked') && $('input[name=need]').is(':checked')){
+      setTimeout(function() { experiment.next(); }, 700)
+    } else {
+      experiment.blur(1);
+    }
+  },
+
+  demovalidation: function() {
+    $('#contButton').removeAttr("disabled");
+    democontainerElement.setAttribute('class', 'blur');
+    if($('input[name=genderButton]').is(':checked') && $('input[name=raceButton]').is(':checked')&& !isNaN(parseInt($('#ageRange').val(),10)) && ($('input[name="nativeLanguage"]').val())!="") {
+      setTimeout(function() { experiment.debrief(); }, 700)
+    } else {
+      experiment.demoblur(1);
+    }
+  }
 
 };
 

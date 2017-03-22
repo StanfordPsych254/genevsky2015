@@ -4,15 +4,26 @@ author: "Lester Tong (lctong@stanford.edu)"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
   html_document:
+    code_folding: hide
     toc: yes
     toc_depth: 3
     toc_float:
       collapsed: false
 ---
 
+```{r include=F}
+####Load Relevant Libraries and Functions
+library(jsonlite)
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(magrittr)
+library(knitr)
+```
+
 ##Introduction
 
-This is a replication of the Internet study described in Genevsky & Knutson (2015). The original study asked about the relative contribution of different features of microloan requests to funding success. The study focused on affective features and modality, including the affective quality of the faces of the microloan recipients, and the text used in the description. The original paper found that affective ratings of microloan recipient faces in an independent Internet sample could be used to predict the rate at which a microloan received funding.
+This is a replication of the Internet study described in Genevsky & Knutson (2015). The original study asked about the relative contribution of different features of microloan requests to funding success. The study focused on affective features and modality, including the affective quality of the faces of the microloan recipients, and the text used in the description. The original paper found that affective ratings of microloan recipient faces in an independent Internet sample could be used to predict the rate at which a microloan received funding. Thus, the result I aim to replicate is the significant linear effect of rated facial positive arousal on the aggregate funding rate.
 
 
 ##Methods
@@ -21,7 +32,35 @@ Participants are asked to view 20 images and rate each of them on the following 
 
 ###Power Analysis
 
-The original analysis was a mixed-effects model, so it is not straightforward to devise an exact power analysis. Instead, I used simulation on the original data, by running the primary analysis of interest on random (without replacement) smaller subsamples of the data, I found that I could obtain power of 0.80 using random samples of 2800 images.
+The original analysis was a mixed-effects model, so it is not straightforward to devise an exact power analysis. Instead, I used simulation on the original data, by running the primary analysis of interest on random (without replacement) smaller subsamples of the data, where a "success" is a significant coefficient on the positive arousal regressor, I found that I could obtain power of 0.80 using random samples of 2800 images.
+
+I conducted a sweep using different sample sizes of images by modifying `nsubjs` in the code below and simulating 1000 samples:
+
+```{r power test}
+
+## load outcome data
+dana1 <- read.csv("kiva_aggdata.csv")
+
+nsubjs=2800
+nsamps=1000;
+successes=0; ## start at zero
+for(i in 1:nsamps){
+  ## sample 
+  subsamp=sample(7000,nsubjs)
+  mod1 <- lmer(logdollarhour ~ scale(per_posemo) + scale(per_negemo) + scale(pa_orig) + scale(na_orig) + 
+                 scale(cansee_orig) + scale(need_orig) + 
+                 scale(total_words_in_description) + 
+                 scale(loan_amount) + scale(terms_2_repayment_term) +
+                 gender + (1|sector) + (1|location_3_country_code), data=dana1[subsamp,])
+  ## count successes
+  if(summary(mod1)$coefficients[4,5]<0.05){ ## coefficient on positive arousal
+    successes=successes+1;
+  }
+}
+success=successes/nsamps
+print(paste("Proportion of successes: ",success))
+
+```
 
 ###Planned Sample
 
@@ -41,7 +80,11 @@ Note that while the original study included 7000 microloans that were funded, we
 
 The key analysis is as follows:
 
-We will conduct a mixed model using random intercepts for subjects, sector, and location country code. The dependent variable will be the logarithm of the rate at which a microloan gets funded. The fixed effects will include: positive discrete emotions, negative discrete emotions, positive arousal, negative arousal, clarity of the image, perceived neediness, number of words in loan description, loan amount requested, repayment term, and requestee gender.
+We will conduct a mixed model using random intercepts for sector, and location country code, corresponding to the regression table presented in Table 1 of the original manuscript. The dependent variable will be the logarithm of the rate at which a microloan gets funded. The fixed effects will include: positive emotion words in the description, negative emotion words in the description, positive arousal, negative arousal, clarity of the image, perceived neediness, number of words in loan description, loan amount requested, repayment term, and requestee gender.
+
+This model structure is identical to the analysis in the original study, which was used in the power analysis above.
+
+A successful replication would require a significant (positive) coefficient on positive arousal.
 
 ###Differences from Original Study
 
@@ -49,9 +92,10 @@ One important difference is that in the current replication, participants are ex
 
 The analysis also uses one MTurker rating per image, rather than two MTurker ratings per image.
 
-The analysis also differs in that it explicitly fits subject random intercepts, rather than aggregating over individual MTurk subjects to arrive at each affect rating.
+Finally, I added zero variance responses as an exclusion criterion, which was not an exclusion criterion in the original study.
 
 These differences are not anticipated to have an effect on the main result.
+
 
 ### Methods Addendum (Post Data Collection)
 
@@ -70,19 +114,11 @@ You can comment this section out prior to final report with data collection.
 ### Data preparation
 
 Data preparation following the analysis plan.
-	
-```{r include=F}
+
+```{r}
 ###Data Preparation
 
-####Load Relevant Libraries and Functions
-library(jsonlite)
-library(tidyverse)
-library(lme4)
-library(lmerTest)
-
 ####Import data
-## load outcome data
-dana1 <- read.csv("kiva_aggdata.csv")
 
 ## load mturk json files
 hits=list.dirs(recursive=F)
@@ -122,7 +158,7 @@ mturkdata=mturkdata[!(mturkdata$subj %in% subj_ex),]
 merged_data=full_join(mturkdata,dana1) %>%
   filter(!is.na(subj))
 
-## generate positive arousal and negative arousal variables, these should be ipsatized, following Knutson, Katovich, & Suri (TICS 2014), but in the original figure they are not
+## generate positive arousal and negative arousal variables, these should be ipsatized, following Knutson, Katovich, & Suri (TICS 2014), but in the original table in the paper they are not
 merged_data = merged_data %>%
   group_by(subj) %>% 
   mutate(val_ip=as.numeric(scale(valence,scale=F)),aro_ip=as.numeric(scale(arousal,scale=F)),see_ip=as.numeric(scale(cansee,scale=F)),need_ip=as.numeric(scale(need,scale=F))) %>% # ipsatize variables
@@ -141,29 +177,36 @@ mod1 <- lmer(logdollarhour ~ scale(per_posemo) + scale(per_negemo) + scale(pa) +
                scale(see_ip) + scale(need_ip) + 
                scale(total_words_in_description) + 
                scale(loan_amount) + scale(terms_2_repayment_term) +
-               gender + (1|sector) + (1|location_3_country_code) + (1|subj), data=merged_data)
+               gender + (1|sector) + (1|location_3_country_code), data=merged_data)
+## fixed effect table without df column
+tidy_table<-summary(mod1)$coefficients[,-3]
+rownames(tidy_table)=c("Intercept","Text: positive words (%)","Text: negative words (%)","Photo: positive arousal","Photo: negative arousal","Photo: identifiability","Borrower's neediness","Text: total number of words","Requested loan amount","Repayment term","Borrower's sex")
+
+tidy_table<-as.data.frame(tidy_table) %>%
+  rownames_to_column("Param")
 
 ## main analysis 2, (figure 2b)
 fig2b_rep=ggplot(summarized_data, aes(x=pa,y=mean_logdollarhour)) +
   geom_point(size=2) +
   geom_errorbar(aes(ymax=mean_logdollarhour+se_logdollarhour,ymin=mean_logdollarhour-se_logdollarhour, width=0.2))+
   geom_smooth(method="lm",se=F) +
-  labs(x = "pa", y = "logdollarhour")+
-  ylim(0,5)
+  labs(x = "Positive Arousal", y = "Aggregate Lending Rate (log($/hr))")+
+  ylim(0,5)+
+  ggtitle("Figure 2b Replication")
 ```
 
 ### Confirmatory analysis
 
-The analyses as specified in the analysis plan.  
+The main analysis to replicate in the original paper was the significant positive coefficient on positive arousal in Table 1. Figure 2b in the original paper provides a visualization of this result. The original figure together with a version using the replication data are also presented below.
 
-## Table 1
+## Table 1 Replication
 ```{r}
-summary(mod1)
+kable(tidy_table,digits=3,col.names=c("Param","B","SE","t","p"))
 ```
 
-![Figure 2B of Genevsky & Knutson (2015)](https://web.stanford.edu/~lctong/mturk/psych254/kiva_rep/fig2b.png)
+![Original Figure 2B of Genevsky & Knutson (2015)](https://web.stanford.edu/~lctong/mturk/psych254/kiva_rep/fig2b.png)
 
-```{r}
+```{r echo=F}
 ### Figure 2b replication
 fig2b_rep
 ```
@@ -171,6 +214,8 @@ fig2b_rep
 ###Exploratory analyses
 
 Any follow-up analyses desired (not required).  
+
+Adding subject random intercepts (not done in original manuscript). Ipsatizing affect variables before PA/NA rotation.
 
 ## Discussion
 
