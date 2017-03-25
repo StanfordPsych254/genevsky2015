@@ -122,7 +122,7 @@ Displays each slide
 */
 
 
-
+// maybe record also where they are from?
 
 function showSlide(id) {
   $(".slide").hide();

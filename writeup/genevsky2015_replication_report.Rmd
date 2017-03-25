@@ -99,14 +99,13 @@ These differences are not anticipated to have an effect on the main result.
 
 ### Methods Addendum (Post Data Collection)
 
-You can comment this section out prior to final report with data collection.
-
 #### Actual Sample
-  Sample size, demographics, data exclusions based on rules spelled out in analysis plan
+The sample included 140 MTurk workers, with approval rate greater than 95% and location in the US. None were excluded.
+
+Of the 140 MTurkers, 93 were male and 47 were female. The vast majority (79%) identified as white. Ages ranged from 20-66 (m: 37.92, sd: 10.27).
 
 #### Differences from pre-data collection methods plan
-  Any differences from what was described as the original plan, or “none”.
-
+The only noteworthy feature that was not included in the preregistration were the qualifications required of MTurk workers (95% approval rate and US location).
 
 ##Results
 
@@ -121,7 +120,7 @@ Data preparation following the analysis plan.
 ####Import data
 
 ## load mturk json files
-hits=list.dirs(recursive=F)
+hits=list.dirs(path="./final_data",recursive=F)
 data=list()
 for (f in hits){
 files=list.files(paste(f,"/production-results-anonymized-results/", sep=""),pattern=".json")
@@ -130,17 +129,31 @@ files=list.files(paste(f,"/production-results-anonymized-results/", sep=""),patt
   }
 }
 ## pull relevant data from json files
-image_0_id=c();valence=c();arousal=c();cansee=c();need=c();comments=c();subj=c()
+image_0_id=c();valence=c();arousal=c();cansee=c();need=c();comments=c();subj=c();age=c();race=c();gender=c();
 for (i in 1:length(data)){
-subj=c(subj,data[[i]]$WorkerId);
+subj=c(subj,data[[i]]$AssignmentId);
 image_0_id=c(image_0_id,as.numeric(data[[i]]$answers$data$orderArray));
 valence=c(valence,data[[i]]$answers$data$valence);
 arousal=c(arousal,data[[i]]$answers$data$arousal);
 cansee=c(cansee,data[[i]]$answers$data$clear);
 need=c(need,data[[i]]$answers$data$need);
 comments=c(comments,data[[i]]$answers$data$comments);
+age=c(age,data[[i]]$answers$data$age);
+race=c(race,data[[i]]$answers$data$race);
+gender=c(gender,data[[i]]$answers$data$gender);
 }
 mturkdata=data.frame(subj,image_0_id,valence,arousal,cansee,need,comments)
+
+mturkdemo=data.frame(subj,age,race,gender)
+
+### quick descriptive stats:
+summary(mturkdemo$race)/20 ## 20 trials per subject
+summary(mturkdemo$gender)/20
+age_dist <- mturkdemo %>% 
+  group_by(subj) %>%
+  summarize(age=mean(as.numeric(as.character(age)),na.rm=TRUE))
+summary(age_dist)
+sd(age_dist$age)
 
 #### Data exclusion / filtering
 
@@ -213,16 +226,55 @@ fig2b_rep
 
 ###Exploratory analyses
 
-Any follow-up analyses desired (not required).  
+In addition to the primary analysis, the following analysis was also described in the preregistration, but not implemented in the original article:
 
-Adding subject random intercepts (not done in original manuscript). Ipsatizing affect variables before PA/NA rotation.
+>Adding subject random intercepts (not done in original manuscript). Ipsatizing affect variables before PA/NA rotation.
+
+Ipsatizing the affect measurements (valence and arousal) is an integral part of the procedure advocated in Knutson, Katovich, & Suri (TICS, 2014) for rotating the valence and arousal axes to align with positive and negative arousal.
+
+```{r}
+mod2 <- lmer(logdollarhour ~ scale(per_posemo) + scale(per_negemo) +
+               scale(pa_ip) + scale(na_ip) + 
+               scale(see_ip) + scale(need_ip) + 
+               scale(total_words_in_description) + 
+               scale(loan_amount) + scale(terms_2_repayment_term) +
+               gender + (1|sector) + (1|location_3_country_code) + (1|subj), data=merged_data)
+## fixed effect table without df column
+tidy_table2<-summary(mod2)$coefficients[,-3]
+rownames(tidy_table2)=c("Intercept","Text: positive words (%)","Text: negative words (%)","Photo: positive arousal","Photo: negative arousal","Photo: identifiability","Borrower's neediness","Text: total number of words","Requested loan amount","Repayment term","Borrower's sex")
+
+tidy_table2<-as.data.frame(tidy_table2) %>%
+  rownames_to_column("Param")
+kable(tidy_table2,digits=3,col.names=c("Param","B","SE","t","p"))
+```
+
+
+Finally, just as a potentially informative comparison, here is the same model fitted on the original data from Genevsky & Knutson (2015).
+
+
+```{r}
+mod3 <- lmer(logdollarhour ~ scale(per_posemo) + scale(per_negemo) +
+               scale(pa_orig) + scale(na_orig) + 
+               scale(see_ip) + scale(need_ip) + 
+               scale(total_words_in_description) + 
+               scale(loan_amount) + scale(terms_2_repayment_term) +
+               gender + (1|sector) + (1|location_3_country_code) + (1|subj), data=merged_data)
+## fixed effect table without df column
+tidy_table3<-summary(mod3)$coefficients[,-3]
+rownames(tidy_table3)=c("Intercept","Text: positive words (%)","Text: negative words (%)","Photo: positive arousal","Photo: negative arousal","Photo: identifiability","Borrower's neediness","Text: total number of words","Requested loan amount","Repayment term","Borrower's sex")
+
+tidy_table3<-as.data.frame(tidy_table3) %>%
+  rownames_to_column("Param")
+kable(tidy_table3,digits=3,col.names=c("Param","B","SE","t","p"))
+```
 
 ## Discussion
 
 ### Summary of Replication Attempt
 
-Open the discussion section with a paragraph summarizing the primary result from the confirmatory analysis and the assessment of whether it replicated, partially replicated, or failed to replicate the original result.  
-
+The primary result from the confirmatory analysis (a significant coefficient on positive arousal predicting funding rate) failed to replicate in this new MTurk sample. 
 ### Commentary
 
-Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis, (b) assessment of the meaning of the replication (or not) - e.g., for a failure to replicate, are the differences between original and present study ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the replication attempt.  None of these need to be long.
+Despite not replicating in the new sample, the subsample of images used in this replication would have shown a significant association in the original sample. This calls into question the reliability of using just one (or two) raters to estimate the population norm. Another possibility is that explicitly making the replication a repeated measures design reduces the variability of affect ratings because subjects attempt to be consistent while the stimuli themselves may not appear to vary that much.
+
+On the other hand, when following the method advocated in Knutson, Katovich & Suri (2014) was used to calculate positive arousal and negative arousal, the coefficient on positive arousal at least trended towards a positive association with funding rate. The only difference between the two analyses is that the valence and arousal measurements are ipsatized within subjects prior to rotation. In practice, this makes individuals that respond more extremely more comparable to individuals that respond less extremely.

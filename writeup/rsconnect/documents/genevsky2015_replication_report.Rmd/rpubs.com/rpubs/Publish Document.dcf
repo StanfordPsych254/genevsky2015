@@ -1,7 +1,8 @@
 name: Publish Document
+title:
 account: rpubs
 server: rpubs.com
-appId: https://api.rpubs.com/api/v1/document/260473/47ea53740af84f5a895e8083b2f1e1b4
-bundleId: https://api.rpubs.com/api/v1/document/260473/47ea53740af84f5a895e8083b2f1e1b4
-url: http://rpubs.com/lctong/260473
-when: 1490213851.54321
+appId: https://api.rpubs.com/api/v1/document/261745/0cd9982de94a4ceeb01f4d1d1ab2c522
+bundleId: https://api.rpubs.com/api/v1/document/261745/0cd9982de94a4ceeb01f4d1d1ab2c522
+url: http://rpubs.com/publish/claim/261745/d4eb8db4686c46079c406fc034980f0b
+when: 1490445549.11607

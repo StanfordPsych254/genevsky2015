@@ -38,3 +38,4 @@ mturk/
 # Specific file keep
 !README.md
 !original_paper/genevsky2015.pdf
+.Rproj.user
